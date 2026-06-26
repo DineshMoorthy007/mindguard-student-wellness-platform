@@ -22,35 +22,35 @@ class MoodLog(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        description="Unique identifier (v4)."
+        comment="Unique identifier (v4)."
     )
     student_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
-        description="References USERS(id)."
+        comment="References USERS(id)."
     )
     input_type: Mapped[InputType] = mapped_column(
         Enum(InputType, name="input_type"),
         nullable=False,
-        description="Type of input: TEXT, VOICE, or SURVEY."
+        comment="Type of input: TEXT, VOICE, or SURVEY."
     )
     raw_content: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
-        description="The actual journal entry text or transcript."
+        comment="The actual journal entry text or transcript."
     )
     self_reported_score: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True,
-        description="Subjective mental score (1 to 10)."
+        comment="Subjective mental score (1 to 10)."
     )
     logged_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
         index=True,
-        description="Timestamp of journal submission."
+        comment="Timestamp of journal submission."
     )
 
     # Relationships

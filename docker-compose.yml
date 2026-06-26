@@ -42,6 +42,7 @@ services:
       dockerfile: Dockerfile
     container_name: mindguard-ml-worker
     restart: always
+    command: tail -f /dev/null
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-secure_database_password_99}@db:5432/${POSTGRES_DB:-mindguard}

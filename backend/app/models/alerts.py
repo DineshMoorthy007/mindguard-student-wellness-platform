@@ -22,44 +22,44 @@ class Alert(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        description="Unique identifier (v4)."
+        comment="Unique identifier (v4)."
     )
     assessment_id: Mapped[UUID] = mapped_column(
         ForeignKey("assessments.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
         index=True,
-        description="References ASSESSMENTS(id) uniquely."
+        comment="References ASSESSMENTS(id) uniquely."
     )
     student_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
-        description="References USERS(id) for the student who triggered the alert."
+        comment="References USERS(id) for the student who triggered the alert."
     )
     counselor_id: Mapped[Optional[UUID]] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=True,
         index=True,
-        description="References USERS(id) for the counselor assigned to resolve the alert. Nullable if unassigned."
+        comment="References USERS(id) for the counselor assigned to resolve the alert. Nullable if unassigned."
     )
     status: Mapped[AlertStatus] = mapped_column(
         Enum(AlertStatus, name="alert_status"),
         default=AlertStatus.PENDING,
         nullable=False,
-        description="Current workflow status of the alert ('PENDING', 'REVIEWED', 'RESOLVED')."
+        comment="Current workflow status of the alert ('PENDING', 'REVIEWED', 'RESOLVED')."
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
         index=True,
-        description="Timestamp indicating when the alert was triggered."
+        comment="Timestamp indicating when the alert was triggered."
     )
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
-        description="Timestamp indicating when the counselor closed and resolved the alert."
+        comment="Timestamp indicating when the counselor closed and resolved the alert."
     )
 
     # Relationships

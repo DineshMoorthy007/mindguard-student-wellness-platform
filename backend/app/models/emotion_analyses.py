@@ -16,35 +16,35 @@ class EmotionAnalysis(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        description="Unique identifier (v4)."
+        comment="Unique identifier (v4)."
     )
     mood_log_id: Mapped[UUID] = mapped_column(
         ForeignKey("mood_logs.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
         index=True,
-        description="References MOOD_LOGS(id) uniquely."
+        comment="References MOOD_LOGS(id) uniquely."
     )
     detected_emotions: Mapped[Dict[str, float]] = mapped_column(
         JSONB,
         nullable=False,
-        description="Matrix of emotions (e.g. {'joy': 0.1, 'sadness': 0.8})."
+        comment="Matrix of emotions (e.g. {'joy': 0.1, 'sadness': 0.8})."
     )
     sentiment_score: Mapped[float] = mapped_column(
         Float,
         nullable=False,
-        description="Aggregate NLP polarity score (-1.0 to 1.0)."
+        comment="Aggregate NLP polarity score (-1.0 to 1.0)."
     )
     primary_emotion: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
-        description="Dominant extracted emotion."
+        comment="Dominant extracted emotion."
     )
     analyzed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
-        description="ML inference completion timestamp."
+        comment="ML inference completion timestamp."
     )
 
     # Relationships

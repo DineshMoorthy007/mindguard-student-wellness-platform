@@ -1,42 +1,51 @@
-# Environment
+# Environment Files
 .env
 .env.*
+!.env.example
 
-# Python
+# Python Caches & Virtual Envs
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+venv/
+.venv/
+env/
 
-# Node
-node_modules/
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/coverage/
+.eslintcache
 
-# Build
-dist/
-build/
+# ML Models & Serialization Artifacts
+backend/app/ml/models/*.pkl
+backend/app/ml/models/*.pt
+backend/app/ml/models/*.bin
+backend/app/ml/models/*.joblib
 
-# ML Models
-ml/models/*.pkl
-ml/models/*.pt
-ml/models/*.bin
-
-# Datasets
+# Datasets (Ignore raw & processed data but keep structure/metadata)
 datasets/raw/*
 datasets/processed/*
-
-# Except metadata
 !datasets/README.md
 !datasets/metadata/
 
-# Jupyter
+# Jupyter Notebooks
 .ipynb_checkpoints/
 
 # Logs
 logs/
 *.log
+backend/logs/
 
-# IDE
+# IDE / Editors / OS
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
+*.swp

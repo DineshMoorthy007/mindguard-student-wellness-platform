@@ -22,30 +22,30 @@ class Assessment(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        description="Unique identifier (v4)."
+        comment="Unique identifier (v4)."
     )
     student_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
-        description="References USERS(id)."
+        comment="References USERS(id)."
     )
     mental_wellness_score: Mapped[float] = mapped_column(
         Float,
         nullable=False,
-        description="Calculated well-being metric (0.0 to 100.0)."
+        comment="Calculated well-being metric (0.0 to 100.0)."
     )
     risk_level: Mapped[RiskLevel] = mapped_column(
         Enum(RiskLevel, name="risk_level"),
         nullable=False,
-        description="Assessed risk level ('LOW', 'MEDIUM', 'HIGH')."
+        comment="Assessed risk level ('LOW', 'MEDIUM', 'HIGH')."
     )
     evaluated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
         index=True,
-        description="Timestamp of evaluation completion."
+        comment="Timestamp of evaluation completion."
     )
 
     # Relationships

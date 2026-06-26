@@ -23,36 +23,36 @@ class User(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        description="Unique identifier (v4)."
+        comment="Unique identifier (v4)."
     )
     email: Mapped[str] = mapped_column(
         String(255),
         unique=True,
         nullable=False,
         index=True,
-        description="User email address."
+        comment="User email address."
     )
     password_hash: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
-        description="Bcrypt hashed password."
+        comment="Bcrypt hashed password."
     )
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role"),
         nullable=False,
-        description="User role permissions ('STUDENT', 'COUNSELOR', 'ADMIN')."
+        comment="User role permissions ('STUDENT', 'COUNSELOR', 'ADMIN')."
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         nullable=False,
-        description="Soft delete toggle."
+        comment="Soft delete toggle."
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
-        description="Account creation time."
+        comment="Account creation time."
     )
 
     # Relationships
