@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: mindguard-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_database_password_99}
+      POSTGRES_DB: ${POSTGRES_DB:-mindguard}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - private-net
+    # Port 5432 is not mapped to the host, ensuring only internal container communication as per requirements.
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindguard-api
+    restart: always
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-secure_database_password_99}@db:5432/${POSTGRES_DB:-mindguard}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super_secret_cryptographic_key_32_bytes}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5173"]}
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - public-net
+      - private-net
+
+  ml-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindguard-ml-worker
+    restart: always
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-secure_database_password_99}@db:5432/${POSTGRES_DB:-mindguard}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super_secret_cryptographic_key_32_bytes}
+    volumes:
+      - ./backend:/app
+      - ml_models:/app/app/ml/models
+    depends_on:
+      - db
+    networks:
+      - private-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mindguard-frontend
+    restart: always
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api/v1}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - public-net
+
+volumes:
+  pgdata:
+  ml_models:
+
+networks:
+  public-net:
+    driver: bridge
+  private-net:
+    driver: bridge
+    internal: true
