@@ -19,8 +19,8 @@ const DashboardLayout: React.FC<{ title: string; subtitle: string }> = ({ title,
       <aside className="w-64 bg-slate-900/60 backdrop-blur-md border-r border-slate-800 p-6 flex flex-col justify-between hidden md:flex z-10">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-md shadow-violet-500/10">
-              <Sparkles className="h-5 w-5 text-white animate-pulse" />
+            <div className="h-9 w-9 rounded-xl border border-slate-800 overflow-hidden shadow-md shadow-violet-500/10 bg-slate-950 flex items-center justify-center">
+              <img src="/favicon.jpg" alt="MindGuard Logo" className="h-full w-full object-cover" />
             </div>
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
               MindGuard

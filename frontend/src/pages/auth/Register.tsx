@@ -80,8 +80,8 @@ export const Register: React.FC = () => {
       <div className="w-full max-w-md z-10">
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-500/20 mb-3 animate-pulse">
-            <Sparkles className="h-6 w-6 text-white" />
+          <div className="h-12 w-12 rounded-2xl border border-slate-800 overflow-hidden shadow-lg shadow-violet-500/10 mb-3 bg-slate-900 flex items-center justify-center">
+            <img src="/favicon.jpg" alt="MindGuard Logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
             MindGuard
