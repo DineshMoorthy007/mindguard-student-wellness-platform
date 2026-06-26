@@ -11,15 +11,34 @@ from app.core.config import settings
 from app.core.exceptions import MindGuardException
 from app.api.v1.auth import router as auth_router
 from app.api.v1.users import students_router, admin_router
+from app.api.v1.mood import mood_router, journal_router
+from app.api.v1.surveys import router as surveys_router
+from app.api.v1.predictions import router as predictions_router
+from app.api.v1.recommendations import router as recommendations_router
+from app.api.v1.alerts import router as alerts_router
+from app.api.v1.notifications import router as notifications_router
+
+from contextlib import asynccontextmanager
+from app.ml.inference import ml_service
 
 # Setup standard structured logging configuration
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: [%(asctime)s] %(message)s")
 logger = logging.getLogger("mindguard-api")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Perform startup routines
+    logger.info("Starting up: preloading machine learning models...")
+    ml_service.load_models()
+    yield
+    # Perform shutdown cleanups if any
+    logger.info("Shutting down api application...")
+
 app = FastAPI(
     title="MindGuard API",
     description="Foundational backend infrastructure and security layer for the MindGuard wellness platform.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # 1. Configure CORS Middleware
@@ -128,3 +147,10 @@ async def catch_all_exception_handler(request: Request, exc: Exception):
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(students_router, prefix="/api/v1/students", tags=["Students"])
 app.include_router(admin_router, prefix="/api/v1/admin", tags=["Institution Administration"])
+app.include_router(mood_router, prefix="/api/v1/mood", tags=["Mood Tracking"])
+app.include_router(journal_router, prefix="/api/v1/journal", tags=["Journal Entries"])
+app.include_router(surveys_router, prefix="/api/v1/surveys", tags=["Clinical Surveys"])
+app.include_router(predictions_router, prefix="/api/v1/predictions", tags=["Clinical Predictions"])
+app.include_router(recommendations_router, prefix="/api/v1/recommendations", tags=["Wellness Recommendations"])
+app.include_router(alerts_router, prefix="/api/v1/counselors", tags=["Counselor Warning Queues"])
+app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["User Notifications"])
