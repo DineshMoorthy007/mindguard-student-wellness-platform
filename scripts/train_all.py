@@ -11,7 +11,10 @@ from sklearn.metrics import classification_report, accuracy_score
 # Setup directories
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RAW_DATA_DIR = os.path.join(BASE_DIR, "datasets", "raw")
-MODEL_DIR = os.path.join(BASE_DIR, "backend", "app", "ml", "models")
+if os.path.isdir(os.path.join(BASE_DIR, "app", "ml")):
+    MODEL_DIR = os.path.join(BASE_DIR, "app", "ml", "models")
+else:
+    MODEL_DIR = os.path.join(BASE_DIR, "backend", "app", "ml", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 NLP_MODEL_PATH = os.path.join(MODEL_DIR, "distilbert_v1.pt")

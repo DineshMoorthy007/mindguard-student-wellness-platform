@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "question": "Feeling nervous, anxious, or on edge?"
+  },
+  {
+    "id": 2,
+    "question": "Not being able to stop or control worrying?"
+  },
+  {
+    "id": 3,
+    "question": "Worrying too much about different things?"
+  },
+  {
+    "id": 4,
+    "question": "Trouble relaxing?"
+  },
+  {
+    "id": 5,
+    "question": "Being so restless that it is hard to sit still?"
+  },
+  {
+    "id": 6,
+    "question": "Becoming easily annoyed or irritable?"
+  },
+  {
+    "id": 7,
+    "question": "Feeling afraid as if something awful might happen?"
+  }
+]

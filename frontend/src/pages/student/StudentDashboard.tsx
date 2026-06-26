@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   useLatestAssessment 
 } from "@/hooks/usePredictions";
@@ -18,7 +19,8 @@ import {
   PieChart, Pie, Cell 
 } from "recharts";
 import { 
-  Mic, Square, Sparkles, BookOpen, Video, FileText, AlertCircle, HelpCircle 
+  Mic, Square, Sparkles, BookOpen, Video, FileText, AlertCircle, HelpCircle,
+  X, Play, Pause, Heart, Check
 } from "lucide-react";
 import api from "@/services/api";
 
@@ -55,6 +57,7 @@ const SURVEY_OPTIONS = [
 
 export const StudentDashboard: React.FC = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // State variables
   const [timeframe, setTimeframe] = useState<"7d" | "30d">("7d");
@@ -72,6 +75,9 @@ export const StudentDashboard: React.FC = () => {
   const [activeSurvey, setActiveSurvey] = useState<"phq-9" | "gad-7" | null>(null);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [surveyResponses, setSurveyResponses] = useState<number[]>([]);
+
+  // Active wellness pathway modal state
+  const [activePathway, setActivePathway] = useState<any | null>(null);
 
   // 1. Data Fetching via React Query hooks (strictly no useEffect for fetches)
   const { data: assessment, isLoading: isAssessmentLoading } = useLatestAssessment();
@@ -175,11 +181,6 @@ export const StudentDashboard: React.FC = () => {
     const nextResponses = [...surveyResponses];
     nextResponses[currentQuestionIdx] = value;
     setSurveyResponses(nextResponses);
-
-    const maxQuestions = activeSurvey === "phq-9" ? 9 : 7;
-    if (currentQuestionIdx < maxQuestions - 1) {
-      setCurrentQuestionIdx(currentQuestionIdx + 1);
-    }
   };
 
   const submitSurvey = async () => {
@@ -197,10 +198,16 @@ export const StudentDashboard: React.FC = () => {
       const response = await api.post(url, { responses: surveyResponses });
       toast({
         title: "Clinical Survey Submitted",
-        description: `Assessment complete. severity indices: ${response.data.severity}`,
+        description: `Assessment complete. Severity: ${response.data.severity}`,
         variant: "success"
       });
       setActiveSurvey(null);
+      
+      // Invalidate queries to refresh dashboard metrics immediately
+      queryClient.invalidateQueries({ queryKey: ["mood-history"] });
+      queryClient.invalidateQueries({ queryKey: ["latest-assessment"] });
+      queryClient.invalidateQueries({ queryKey: ["current-recommendations"] });
+      queryClient.invalidateQueries({ queryKey: ["user-notifications"] });
     } catch (err) {
       toast({
         title: "Submission Failed",
@@ -363,7 +370,7 @@ export const StudentDashboard: React.FC = () => {
               <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center">
                 <div className="relative">
                   {isRecording && (
-                    <div className="absolute inset-0 rounded-full bg-violet-600/30 animate-ping" />
+                    <div className="absolute inset-0 rounded-full bg-violet-600/30 animate-ping pointer-events-none" />
                   )}
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
@@ -473,7 +480,17 @@ export const StudentDashboard: React.FC = () => {
                         Previous
                       </Button>
                       
-                      {currentQuestionIdx === (activeSurvey === "phq-9" ? 8 : 6) ? (
+                      {currentQuestionIdx < (activeSurvey === "phq-9" ? 8 : 6) ? (
+                        <Button
+                          disabled={surveyResponses[currentQuestionIdx] === -1}
+                          onClick={() => setCurrentQuestionIdx(currentQuestionIdx + 1)}
+                          variant="outline"
+                          size="sm"
+                          className="bg-violet-600 hover:bg-violet-500 text-white font-semibold"
+                        >
+                          Next
+                        </Button>
+                      ) : (
                         <Button
                           disabled={surveyResponses.includes(-1)}
                           onClick={submitSurvey}
@@ -482,7 +499,7 @@ export const StudentDashboard: React.FC = () => {
                         >
                           Finish & Evaluate
                         </Button>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 )}
@@ -586,12 +603,11 @@ export const StudentDashboard: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {recommendations.activities.map((act, index) => (
-                <a 
+                <button 
                   key={index}
-                  href={act.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-start gap-4 p-4 rounded-xl border border-slate-800/80 bg-slate-950/20 hover:bg-slate-900/40 hover:border-slate-700/80 transition-all group"
+                  type="button"
+                  onClick={() => setActivePathway(act)}
+                  className="w-full text-left flex items-start gap-4 p-4 rounded-xl border border-slate-800/80 bg-slate-950/20 hover:bg-slate-900/40 hover:border-slate-700/80 transition-all group"
                 >
                   <div className="h-10 w-10 rounded-lg bg-violet-600/10 flex items-center justify-center text-violet-400 group-hover:scale-105 transition-transform shrink-0">
                     {act.type === "MINDFULNESS" || act.type === "MEDITATION" ? (
@@ -615,12 +631,311 @@ export const StudentDashboard: React.FC = () => {
                       Click to launch exercise stream from MindGuard directories.
                     </p>
                   </div>
-                </a>
+                </button>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Pathway Modal Overlay */}
+      {activePathway && (
+        <PathwayModal 
+          pathway={activePathway} 
+          onClose={() => setActivePathway(null)} 
+        />
+      )}
+    </div>
+  );
+};
+
+// Interactive Wellness Pathway Modal Detail Component
+interface PathwayModalProps {
+  pathway: {
+    type: string;
+    title: string;
+    url: string;
+  };
+  onClose: () => void;
+}
+
+const PathwayModal: React.FC<PathwayModalProps> = ({ pathway, onClose }) => {
+  const [breathPhase, setBreathPhase] = useState<"Inhale" | "Hold" | "Exhale" | "Hold2">("Inhale");
+  const [breathSeconds, setBreathSeconds] = useState(4);
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(12);
+  const [checklist, setChecklist] = useState([
+    { text: "Drink 500ml of fresh water", completed: false },
+    { text: "Stretch neck, shoulders, and back for 2 mins", completed: false },
+    { text: "Step away from screen, walk around for 5 mins", completed: false },
+    { text: "Take 3 slow deep breaths right now", completed: false },
+  ]);
+  
+  useEffect(() => {
+    if (pathway.type !== "MINDFULNESS") return;
+    const interval = setInterval(() => {
+      setBreathSeconds((prev) => {
+        if (prev <= 1) {
+          setBreathPhase((current) => {
+            if (current === "Inhale") return "Hold";
+            if (current === "Hold") return "Exhale";
+            if (current === "Exhale") return "Hold2";
+            return "Inhale";
+          });
+          return 4;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [pathway, breathPhase]);
+
+  useEffect(() => {
+    if (!audioPlaying) return;
+    const interval = setInterval(() => {
+      setAudioProgress((prev) => (prev >= 300 ? 0 : prev + 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [audioPlaying]);
+
+  const formatTime = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  const getPhaseColor = () => {
+    if (breathPhase === "Inhale") return "text-emerald-400 bg-emerald-500/10";
+    if (breathPhase === "Hold" || breathPhase === "Hold2") return "text-amber-400 bg-amber-500/10";
+    return "text-violet-400 bg-violet-500/10";
+  };
+
+  const completedCount = checklist.filter((i) => i.completed).length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
+        {/* Header */}
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 rounded bg-violet-600/15 text-[9px] text-violet-400 font-bold uppercase tracking-widest">
+              {pathway.type}
+            </span>
+            <h4 className="text-white font-bold text-sm leading-snug truncate max-w-[280px]">
+              {pathway.title}
+            </h4>
+          </div>
+          <button 
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            <X className="h-4.5 w-4.5" />
+          </button>
+        </div>
+
+        {/* Content Body */}
+        <div className="p-6 flex-1 space-y-6">
+          
+          {/* Box Breathing */}
+          {pathway.type === "MINDFULNESS" && (
+            <div className="flex flex-col items-center justify-center py-6 text-center space-y-6">
+              <div className="h-44 w-44 rounded-full border border-slate-800 flex items-center justify-center relative">
+                <div 
+                  className={`absolute rounded-full transition-all duration-[4000ms] ease-in-out bg-gradient-to-tr from-violet-600 to-indigo-500 opacity-20 ${
+                    breathPhase === "Inhale" 
+                      ? "h-40 w-40 scale-110" 
+                      : breathPhase === "Exhale" 
+                      ? "h-24 w-24 scale-90" 
+                      : "h-32 w-32 scale-100"
+                  }`} 
+                />
+                <div className="z-10 flex flex-col items-center">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getPhaseColor()}`}>
+                    {breathPhase === "Hold2" ? "Hold" : breathPhase}
+                  </span>
+                  <span className="text-3xl font-black text-white mt-1.5">{breathSeconds}s</span>
+                </div>
+              </div>
+              
+              <div className="space-y-1.5">
+                <p className="text-xs text-slate-400">
+                  Follow the visual circle: Inhale (4s) → Hold (4s) → Exhale (4s) → Hold (4s)
+                </p>
+                <p className="text-[10px] text-slate-500 italic">
+                  Box breathing calms the nervous system and lowers active stress levels.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Audio Grounding */}
+          {pathway.type === "MEDITATION" && (
+            <div className="space-y-6">
+              <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between">
+                <button 
+                  type="button"
+                  onClick={() => setAudioPlaying(!audioPlaying)}
+                  className="h-10 w-10 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center transition-colors"
+                >
+                  {audioPlaying ? <Pause className="h-4 w-4 fill-white" /> : <Play className="h-4 w-4 fill-white ml-0.5" />}
+                </button>
+                <div className="flex-1 mx-4 space-y-1.5">
+                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-violet-500 transition-all duration-1000" 
+                      style={{ width: `${(audioProgress / 300) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
+                    <span>{formatTime(audioProgress)}</span>
+                    <span>5:00</span>
+                  </div>
+                </div>
+                <Heart className="h-4 w-4 text-violet-400" />
+              </div>
+
+              <div className="space-y-3">
+                <h5 className="text-white font-bold text-xs uppercase tracking-wider text-slate-400">5-4-3-2-1 Sensory Check</h5>
+                <ul className="space-y-2 text-xs text-slate-300">
+                  <li className="flex gap-2"><b className="text-violet-400 font-bold">5:</b> Name five things you can see around you.</li>
+                  <li className="flex gap-2"><b className="text-violet-400 font-bold">4:</b> Acknowledge four things you can touch.</li>
+                  <li className="flex gap-2"><b className="text-violet-400 font-bold">3:</b> Listen to three distinct background sounds.</li>
+                  <li className="flex gap-2"><b className="text-violet-400 font-bold">2:</b> Notice two things you can smell.</li>
+                  <li className="flex gap-2"><b className="text-violet-400 font-bold">1:</b> Reflect on one thing you can taste.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Articles */}
+          {pathway.type === "ARTICLE" && (
+            <div className="space-y-4">
+              <h4 className="text-white font-bold text-sm leading-tight text-slate-200">
+                Scientific Recovery Protocol
+              </h4>
+              
+              <div className="text-xs text-slate-300 space-y-3 leading-relaxed max-h-[220px] overflow-y-auto pr-1">
+                {pathway.title.includes("Burnout") ? (
+                  <>
+                    <p><b className="text-violet-400">1. Shift Boundaries:</b> Set strict time-blocks for studying. Step away from work interfaces after 7 PM. Mental strain increases when workload hours bleed into relaxation cycles.</p>
+                    <p><b className="text-violet-400">2. Intermittent Breaks:</b> Implement the Pomodoro technique (25m study, 5m off-screen rest). Walk or stretch during breaks.</p>
+                    <p><b className="text-violet-400">3. Reframe Success:</b> Remind yourself that mental energy is a prerequisite for good performance. Overworking leads to diminished returns.</p>
+                  </>
+                ) : pathway.title.includes("Sleep") ? (
+                  <>
+                    <p><b className="text-violet-400">1. The 10-3-2-1 Rule:</b> No caffeine 10 hours before sleep, no heavy meals 3 hours before, no academic tasks 2 hours before, and no screens 1 hour before sleep.</p>
+                    <p><b className="text-violet-400">2. Wake-up Anchor:</b> Keep a fixed alarm time regardless of weekend schedules to standardize circadian rhythm recovery.</p>
+                    <p><b className="text-violet-400">3. Bedroom Hygiene:</b> Maintain a cool, dark room. Use white noise if study noises surround your space.</p>
+                  </>
+                ) : (
+                  <>
+                    <p><b className="text-violet-400">1. Time Chunking:</b> Allocate distinct blocks for courses, personal health, social interaction, and restorative rest. Do not over-schedule.</p>
+                    <p><b className="text-violet-400">2. Peer Support:</b> Engage in structured group activities or counseling support early when stress signals mount.</p>
+                    <p><b className="text-violet-400">3. Routine Self-Checkin:</b> Log feelings and volatile stress triggers daily to maintain conscious awareness of mental states.</p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Habit Checklist / Video Mockup */}
+          {(pathway.type === "VIDEO" || pathway.type === "HEALTH") && (
+            <div className="space-y-4">
+              <h4 className="text-white font-bold text-xs uppercase tracking-wider text-slate-400">Interactive Self-Care Checklist</h4>
+              <div className="space-y-2">
+                {checklist.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      const next = [...checklist];
+                      next[idx].completed = !next[idx].completed;
+                      setChecklist(next);
+                    }}
+                    className="w-full text-left p-3 rounded-lg border border-slate-800 bg-slate-950/20 flex items-center justify-between hover:bg-slate-900/20 transition-all text-xs"
+                  >
+                    <span className={item.completed ? "text-slate-500 line-through" : "text-slate-300 font-medium"}>
+                      {item.text}
+                    </span>
+                    <div className={`h-5 w-5 rounded border flex items-center justify-center transition-all shrink-0 ${
+                      item.completed 
+                        ? "bg-violet-600 border-violet-500 text-white" 
+                        : "border-slate-700 bg-slate-900"
+                    }`}>
+                      {item.completed && <Check className="h-3 w-3" />}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-1.5 pt-2">
+                <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+                  <span>Habit Progress Tracker</span>
+                  <span>{completedCount} OF {checklist.length}</span>
+                </div>
+                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-300"
+                    style={{ width: `${(completedCount / checklist.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Emergency support / Appointments */}
+          {(pathway.type === "SUPPORT" || pathway.type === "APPOINTMENT") && (
+            <div className="space-y-5 py-2">
+              <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/20 flex gap-3 text-red-300 text-xs">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <div className="space-y-1">
+                  <h5 className="font-bold">Intervention Support Action</h5>
+                  <p className="leading-relaxed">This action sends a direct confirmation of priority intervention check-in request to the counselor's warning queue.</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h5 className="text-white font-bold text-xs">Crisis Support Hotlines:</h5>
+                <ul className="space-y-1.5 text-xs text-slate-300">
+                  <li className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                    <span>Campus Wellness Desk</span>
+                    <b className="text-violet-400">+1 (585) 475-3333</b>
+                  </li>
+                  <li className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                    <span>National Crisis Lifeline</span>
+                    <b className="text-violet-400">988</b>
+                  </li>
+                  <li className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                    <span>Crisis Text Line</span>
+                    <span>Text <b className="text-violet-400">HOME</b> to <b>741741</b></span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-2">
+                <Button 
+                  onClick={() => {
+                    alert("Intervention check-in confirmed. Priority alert successfully sent.");
+                    onClose();
+                  }}
+                  className="w-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs"
+                >
+                  Dispatch Priority Alert to Counselor
+                </Button>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 bg-slate-950/40 border-t border-slate-800 flex justify-end">
+          <Button size="sm" onClick={onClose} className="bg-slate-800 hover:bg-slate-700 text-slate-200">
+            Close
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

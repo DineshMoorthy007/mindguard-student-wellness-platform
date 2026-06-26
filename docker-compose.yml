@@ -28,6 +28,7 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5173"]}
     volumes:
       - ./backend:/app
+      - ./scripts:/app/scripts
     ports:
       - "8000:8000"
     depends_on:
@@ -49,6 +50,7 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super_secret_cryptographic_key_32_bytes}
     volumes:
       - ./backend:/app
+      - ./scripts:/app/scripts
       - ml_models:/app/app/ml/models
     depends_on:
       - db

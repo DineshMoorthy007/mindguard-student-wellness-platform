@@ -28,21 +28,46 @@ async def get_institution_report(
     Retrieves aggregated, anonymized mental wellness analytics for the entire institution.
     Only accessible by accounts with the ADMIN role.
     """
-    # 1. Total students monitored
-    student_count_query = select(func.count(User.id)).where(User.role == UserRole.STUDENT, User.is_active == True)
+    from datetime import datetime, time, timezone
+
+    start_dt = None
+    end_dt = None
+    if start_date:
+        try:
+            start_dt = datetime.combine(datetime.strptime(start_date, "%Y-%m-%d").date(), time.min).replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    if end_date:
+        try:
+            end_dt = datetime.combine(datetime.strptime(end_date, "%Y-%m-%d").date(), time.max).replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
+    # 1. Total students monitored (distinct students with assessments in the period)
+    student_count_query = select(func.count(func.distinct(Assessment.student_id)))
+    if start_dt:
+        student_count_query = student_count_query.where(Assessment.evaluated_at >= start_dt)
+    if end_dt:
+        student_count_query = student_count_query.where(Assessment.evaluated_at <= end_dt)
+        
     student_count_result = await db.execute(student_count_query)
     total_students = student_count_result.scalar() or 0
+    
     # Provide a default fallback if database is empty for visual showcase
     if total_students == 0:
-        total_students = 1500
+        db_student_count_query = select(func.count(User.id)).where(User.role == UserRole.STUDENT, User.is_active == True)
+        db_student_count_result = await db.execute(db_student_count_query)
+        total_students = db_student_count_result.scalar() or 0
+        if total_students == 0:
+            total_students = 1500
 
     # 2. Average mental wellness score
     wellness_avg_query = select(func.avg(Assessment.mental_wellness_score))
     # Apply date filters if available
-    if start_date:
-        wellness_avg_query = wellness_avg_query.where(Assessment.evaluated_at >= start_date)
-    if end_date:
-        wellness_avg_query = wellness_avg_query.where(Assessment.evaluated_at <= end_date)
+    if start_dt:
+        wellness_avg_query = wellness_avg_query.where(Assessment.evaluated_at >= start_dt)
+    if end_dt:
+        wellness_avg_query = wellness_avg_query.where(Assessment.evaluated_at <= end_dt)
         
     wellness_avg_result = await db.execute(wellness_avg_query)
     avg_score = wellness_avg_result.scalar()
@@ -53,10 +78,10 @@ async def get_institution_report(
 
     # 3. Risk distribution
     risk_query = select(Assessment.risk_level, func.count(Assessment.id)).group_by(Assessment.risk_level)
-    if start_date:
-        risk_query = risk_query.where(Assessment.evaluated_at >= start_date)
-    if end_date:
-        risk_query = risk_query.where(Assessment.evaluated_at <= end_date)
+    if start_dt:
+        risk_query = risk_query.where(Assessment.evaluated_at >= start_dt)
+    if end_dt:
+        risk_query = risk_query.where(Assessment.evaluated_at <= end_dt)
         
     risk_result = await db.execute(risk_query)
     risk_counts = {r: count for r, count in risk_result.all()}
@@ -77,8 +102,10 @@ async def get_institution_report(
         func.count(EmotionAnalysis.id)
     ).group_by(EmotionAnalysis.primary_emotion).order_by(func.count(EmotionAnalysis.id).desc()).limit(1)
     
-    if start_date:
-        emotion_query = emotion_query.join(Assessment, Assessment.student_id == EmotionAnalysis.id) # just join if date filters are used, or keep simple
+    if start_dt:
+        emotion_query = emotion_query.where(EmotionAnalysis.analyzed_at >= start_dt)
+    if end_dt:
+        emotion_query = emotion_query.where(EmotionAnalysis.analyzed_at <= end_dt)
     
     emotion_result = await db.execute(emotion_query)
     emotion_row = emotion_result.first()

@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from sqlalchemy import text
 
 # Add project root to path to ensure app imports resolve
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
 # Load and resolve environment variable templates from .env before importing settings
@@ -36,7 +37,7 @@ def resolve_env_vars(url: str) -> str:
 resolved_url = resolve_env_vars(db_url)
 
 # Replace 'db' container hostname with 'localhost' if running locally outside container
-if os.environ.get("ENVIRONMENT") == "development" and "@db:" in resolved_url:
+if os.environ.get("ENVIRONMENT") == "development" and "@db:" in resolved_url and not os.path.exists('/.dockerenv'):
     resolved_url = resolved_url.replace("@db:", "@localhost:")
 
 os.environ["DATABASE_URL"] = resolved_url

@@ -12,25 +12,44 @@ __pycache__/
 .coverage
 htmlcov/
 .mypy_cache/
+.ruff_cache/
+.cache/
+.tox/
+.nox/
 venv/
 .venv/
 env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# SQLite Databases & Local DB Storage
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+*.sqlite3
 
 # Node / Frontend
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/coverage/
 .eslintcache
+.npm/
 
-# ML Models & Serialization Artifacts
+# ML Models, Serialization Artifacts & Experiment Logs
 backend/app/ml/models/*.pkl
 backend/app/ml/models/*.pt
 backend/app/ml/models/*.bin
 backend/app/ml/models/*.joblib
+wandb/
+runs/
 
-# Datasets (Ignore raw & processed data but keep structure/metadata)
+# Datasets (Ignore raw & processed data but keep structure, metadata and questionnaire configs)
 datasets/raw/*
+!datasets/raw/phq9/
+!datasets/raw/gad7/
 datasets/processed/*
 !datasets/README.md
 !datasets/metadata/
@@ -48,4 +67,10 @@ backend/logs/
 .idea/
 .DS_Store
 Thumbs.db
+[Dd]esktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 *.swp

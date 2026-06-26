@@ -27,6 +27,6 @@ export const useInstitutionReport = (startDate?: string, endDate?: string) => {
       const response = await api.get(url);
       return response.data;
     },
-    staleTime: 10 * 60 * 1000, // Analytics can remain cached longer (10 minutes)
+    staleTime: 0, // Analytics should always reflect fresh DB metrics when requested
   });
 };
