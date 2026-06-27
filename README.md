@@ -91,8 +91,8 @@ graph TD
     end
 
     %% Flow Connections
-    Web -->|HTTPS/REST| Gateway
-    Mobile -->|HTTPS/REST| Gateway
+    Web -->|HTTPS or REST| Gateway
+    Mobile -->|HTTPS or REST| Gateway
 
     Gateway --> Auth
     Gateway --> Mood
@@ -116,13 +116,13 @@ To maintain strict compliance and prevent data leaks, MindGuard segregates commu
 ```mermaid
 graph TD
     subgraph PublicSubnet ["Public Subnet (Internet Facing)"]
-        client["Web Browser"] -.->| "HTTPS (Port 80/443)" | frontend["frontend Container - Vite/Nginx"]
-        client -.->| "HTTPS (Port 8000)" | api["api Container - FastAPI/Uvicorn"]
+        client["Web Browser"] -.->|HTTPS Port 80 and 443| frontend["frontend Container - Vite/Nginx"]
+        client -.->|HTTPS Port 8000| api["api Container - FastAPI/Uvicorn"]
     end
 
     subgraph PrivateSubnet ["Private Subnet (Isolated Internal Network)"]
-        api -->| "Internal DNS" | db[("db Container - PostgreSQL 15")]
-        api -->| "Internal DNS" | ml-worker["ml-worker Container - Task Runner"]
+        api -->|Internal DNS| db[("db Container - PostgreSQL 15")]
+        api -->|Internal DNS| ml-worker["ml-worker Container - Task Runner"]
         ml-worker --> db
     end
 
