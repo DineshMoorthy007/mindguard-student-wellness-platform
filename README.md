@@ -55,39 +55,39 @@ The system partitions user interaction from compute-heavy machine learning calcu
 graph TD
     %% Client Layer
     subgraph ClientLayer ["Client Layer"]
-        Web[Web App - React/Tailwind]
-        Mobile[Mobile App - PWA/Flutter]
+        Web["Web App - React/Tailwind"]
+        Mobile["Mobile App - PWA/Flutter"]
     end
 
     %% Gateway Layer
-    Gateway[FastAPI API Gateway]
+    Gateway["FastAPI API Gateway"]
 
     %% Internal Micro-services
     subgraph BackendServices ["Backend Services"]
-        Auth[Authentication Service]
-        Mood[Mood Tracking Service]
-        Wellness[Wellness Analytics Engine]
-        Notify[Notification Service]
+        Auth["Authentication Service"]
+        Mood["Mood Tracking Service"]
+        Wellness["Wellness Analytics Engine"]
+        Notify["Notification Service"]
     end
 
     %% AI / ML Processing
     subgraph ProcessingLayer ["Processing Layer"]
-        Sentiment[Sentiment Analysis]
-        Emotion[Emotion Detection Engine]
-        Risk[Risk Assessment Engine]
-        Recommend[Recommendation Engine]
+        Sentiment["Sentiment Analysis"]
+        Emotion["Emotion Detection Engine"]
+        Risk["Risk Assessment Engine"]
+        Recommend["Recommendation Engine"]
     end
 
     %% Database
     subgraph DataLayer ["Data Layer"]
-        DB[(PostgreSQL)]
+        DB[("PostgreSQL")]
     end
 
     %% Dashboard Outputs
     subgraph Dashboards ["Dashboards"]
-        StudentDash[Student Dashboard]
-        CounselorDash[Counselor Dashboard]
-        AdminDash[Institution Dashboard]
+        StudentDash["Student Dashboard"]
+        CounselorDash["Counselor Dashboard"]
+        AdminDash["Institution Dashboard"]
     end
 
     %% Flow Connections
@@ -116,19 +116,19 @@ To maintain strict compliance and prevent data leaks, MindGuard segregates commu
 ```mermaid
 graph TD
     subgraph PublicSubnet ["Public Subnet (Internet Facing)"]
-        client[Web Browser] -.->|HTTPS (Port 80/443)| frontend[frontend Container - Vite/Nginx]
-        client -.->|HTTPS (Port 8000)| api[api Container - FastAPI/Uvicorn]
+        client["Web Browser"] -.->| "HTTPS (Port 80/443)" | frontend["frontend Container - Vite/Nginx"]
+        client -.->| "HTTPS (Port 8000)" | api["api Container - FastAPI/Uvicorn"]
     end
 
     subgraph PrivateSubnet ["Private Subnet (Isolated Internal Network)"]
-        api -->|Internal DNS| db[(db Container - PostgreSQL 15)]
-        api -->|Internal DNS| ml-worker[ml-worker Container - Task Runner]
+        api -->| "Internal DNS" | db[("db Container - PostgreSQL 15")]
+        api -->| "Internal DNS" | ml-worker["ml-worker Container - Task Runner"]
         ml-worker --> db
     end
 
     %% Volumes
-    db_vol[(pgdata Volume)] === db
-    ml_vol[(ml_models Volume)] === ml-worker
+    db_vol[("pgdata Volume")] === db
+    ml_vol[("ml_models Volume")] === ml-worker
 ```
 
 ---
@@ -373,30 +373,30 @@ The ML pipeline is partitioned into two distinct engines to perform comprehensiv
 ```mermaid
 graph TD
     %% Input
-    Input[Raw Text Journal Entry] --> PII[PII Masking Engine - NER Regex]
-    PII --> Tokenizer[DistilBERT Tokenizer]
+    Input["Raw Text Journal Entry"] --> PII["PII Masking Engine - NER Regex"]
+    PII --> Tokenizer["DistilBERT Tokenizer"]
     
     %% Emotion Engine
     subgraph EmotionDetectionEngine ["Emotion Detection Engine"]
-        Tokenizer --> DistilBERT[Fine-tuned DistilBERT Classifier]
-        DistilBERT --> Emotions[Emotion Probability Vector <br> joy, sadness, anxiety, anger, fear, surprise]
+        Tokenizer --> DistilBERT["Fine-tuned DistilBERT Classifier"]
+        DistilBERT --> Emotions["Emotion Probability Vector <br> joy, sadness, anxiety, anger, fear, surprise"]
     end
     
     %% Risk Engine
     subgraph RiskAssessmentEngine ["Risk Assessment Engine"]
-        Emotions --> FeatureEng[Feature Engineering <br> Volatility, exam index, rolling average]
-        Survey[Survey Metrics <br> PHQ-9 / GAD-7 scores] --> FeatureEng
-        FeatureEng --> Scaler[StandardScaler]
-        Scaler --> RandomForest[XGBoost & RandomForest Classifier]
-        RandomForest --> RiskScore[Mental Wellness Score <br> 0 - 100]
-        RandomForest --> RiskTier[Risk Category <br> Low, Medium, High]
+        Emotions --> FeatureEng["Feature Engineering <br> Volatility, exam index, rolling average"]
+        Survey["Survey Metrics <br> PHQ-9 / GAD-7 scores"] --> FeatureEng
+        FeatureEng --> Scaler["StandardScaler"]
+        Scaler --> RandomForest["XGBoost & RandomForest Classifier"]
+        RandomForest --> RiskScore["Mental Wellness Score <br> 0 - 100"]
+        RandomForest --> RiskTier["Risk Category <br> Low, Medium, High"]
     end
 
     %% Action Output
     RiskTier --> DecisionDiamond{Risk Stratification}
-    DecisionDiamond -->|Low| SelfHelp[Self-help Resources]
-    DecisionDiamond -->|Medium| Coping[Guided Coping Activities]
-    DecisionDiamond -->|High| Warning[Counselor Alert Queue]
+    DecisionDiamond -->|Low| SelfHelp["Self-help Resources"]
+    DecisionDiamond -->|Medium| Coping["Guided Coping Activities"]
+    DecisionDiamond -->|High| Warning["Counselor Alert Queue"]
 ```
 
 ### 6.1 Data Preprocessing & PII Masking
