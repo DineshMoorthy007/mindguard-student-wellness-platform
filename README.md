@@ -54,7 +54,7 @@ The system partitions user interaction from compute-heavy machine learning calcu
 ```mermaid
 graph TD
     %% Client Layer
-    subgraph Client Layer
+    subgraph ClientLayer ["Client Layer"]
         Web[Web App - React/Tailwind]
         Mobile[Mobile App - PWA/Flutter]
     end
@@ -63,7 +63,7 @@ graph TD
     Gateway[FastAPI API Gateway]
 
     %% Internal Micro-services
-    subgraph Backend Services
+    subgraph BackendServices ["Backend Services"]
         Auth[Authentication Service]
         Mood[Mood Tracking Service]
         Wellness[Wellness Analytics Engine]
@@ -71,7 +71,7 @@ graph TD
     end
 
     %% AI / ML Processing
-    subgraph Processing Layer
+    subgraph ProcessingLayer ["Processing Layer"]
         Sentiment[Sentiment Analysis]
         Emotion[Emotion Detection Engine]
         Risk[Risk Assessment Engine]
@@ -79,12 +79,12 @@ graph TD
     end
 
     %% Database
-    subgraph Data Layer
+    subgraph DataLayer ["Data Layer"]
         DB[(PostgreSQL)]
     end
 
     %% Dashboard Outputs
-    subgraph Dashboards
+    subgraph Dashboards ["Dashboards"]
         StudentDash[Student Dashboard]
         CounselorDash[Counselor Dashboard]
         AdminDash[Institution Dashboard]
@@ -99,8 +99,8 @@ graph TD
     Gateway --> Wellness
     Gateway --> Notify
 
-    Mood --> Processing Layer
-    Processing Layer --> DB
+    Mood --> ProcessingLayer
+    ProcessingLayer --> DB
     
     Auth --> DB
     Wellness --> DB
@@ -115,12 +115,12 @@ To maintain strict compliance and prevent data leaks, MindGuard segregates commu
 
 ```mermaid
 graph TD
-    subgraph Public Subnet (Internet Facing)
+    subgraph PublicSubnet ["Public Subnet (Internet Facing)"]
         client[Web Browser] -.->|HTTPS (Port 80/443)| frontend[frontend Container - Vite/Nginx]
         client -.->|HTTPS (Port 8000)| api[api Container - FastAPI/Uvicorn]
     end
 
-    subgraph Private Subnet (Isolated Internal Network)
+    subgraph PrivateSubnet ["Private Subnet (Isolated Internal Network)"]
         api -->|Internal DNS| db[(db Container - PostgreSQL 15)]
         api -->|Internal DNS| ml-worker[ml-worker Container - Task Runner]
         ml-worker --> db
@@ -141,11 +141,11 @@ When a student checks in, data undergoes sequential sanitization, classification
 
 ```mermaid
 sequenceDiagram
-    participant Student as Student (Web/Mobile)
-    participant API as FastAPI Backend
-    participant ML as Processing Layer
-    participant DB as PostgreSQL
-    participant Counselor as Counselor Dashboard
+    participant Student as "Student (Web/Mobile)"
+    participant API as "FastAPI Backend"
+    participant ML as "Processing Layer"
+    participant DB as "PostgreSQL"
+    participant Counselor as "Counselor Dashboard"
 
     Student->>API: Submit Text/Voice Entry
     API->>API: Mask PII (NER Regex Engine)
@@ -172,10 +172,10 @@ Authentication is managed via JSON Web Tokens (JWT) using short-lived Access Tok
 
 ```mermaid
 sequenceDiagram
-    participant Client as React App
-    participant Gateway as API Gateway
-    participant Auth as Auth Service
-    participant DB as PostgreSQL
+    participant Client as "React App"
+    participant Gateway as "API Gateway"
+    participant Auth as "Auth Service"
+    participant DB as "PostgreSQL"
 
     Client->>Gateway: POST /api/v1/auth/login (Credentials)
     Gateway->>Auth: Forward Credentials
@@ -377,13 +377,13 @@ graph TD
     PII --> Tokenizer[DistilBERT Tokenizer]
     
     %% Emotion Engine
-    subgraph Emotion Detection Engine
+    subgraph EmotionDetectionEngine ["Emotion Detection Engine"]
         Tokenizer --> DistilBERT[Fine-tuned DistilBERT Classifier]
         DistilBERT --> Emotions[Emotion Probability Vector <br> joy, sadness, anxiety, anger, fear, surprise]
     end
     
     %% Risk Engine
-    subgraph Risk Assessment Engine
+    subgraph RiskAssessmentEngine ["Risk Assessment Engine"]
         Emotions --> FeatureEng[Feature Engineering <br> Volatility, exam index, rolling average]
         Survey[Survey Metrics <br> PHQ-9 / GAD-7 scores] --> FeatureEng
         FeatureEng --> Scaler[StandardScaler]
