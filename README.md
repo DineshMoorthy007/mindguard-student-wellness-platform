@@ -14,6 +14,38 @@
 
 ---
 
+## Synopsis
+
+MindGuard is an academic mental health and psychological support platform that transitions student care from a reactive model to a proactive, preventive system. By integrating student self-reflections (text/voice journals), standardized clinical surveys (PHQ-9 and GAD-7), and an NLP processing pipeline, the system automatically stratifies risk to deliver tailored self-help resources or escalate high-risk cases directly to counselor triage queues.
+
+### Table of Contents
+
+- [1. Project Overview](#1-project-overview)
+- [2. Core Features](#2-core-features)
+- [3. System Architecture](#3-system-architecture)
+  - [3.1 Component Architecture Diagram](#31-component-architecture-diagram)
+  - [3.2 Network Isolation and Subnet Security Diagram](#32-network-isolation-and-subnet-security-diagram)
+- [4. Platform Workflow (How it Works)](#4-platform-workflow-how-it-works)
+  - [4.1 Daily Check-In and Evaluation Lifecycle](#41-daily-check-in-and-evaluation-lifecycle)
+  - [4.2 Authentication Flow](#42-authentication-flow)
+- [5. Quick Start and Execution (How to Run)](#5-quick-start-and-execution-how-to-run)
+  - [5.1 Environment Configuration](#51-environment-configuration)
+  - [Option A: Containerized Execution (Docker Compose)](#option-a-containerized-execution-docker-compose)
+  - [Option B: Manual Local Setup (Host Machine)](#option-b-manual-local-setup-host-machine)
+  - [5.3 Default Seeding Credentials](#53-default-seeding-credentials)
+- [6. Machine Learning Pipeline (In Depth)](#6-machine-learning-pipeline-in-depth)
+  - [6.1 Data Preprocessing & PII Masking](#61-data-preprocessing--pii-masking)
+  - [6.2 Model Versioning & MLflow](#62-model-versioning--mlflow)
+- [7. Deployment & CI/CD Guidelines](#7-deployment--cicd-guidelines)
+  - [7.1 AWS Production Topology](#71-aws-production-topology)
+  - [7.2 CI/CD Pipeline Workflow (GitHub Actions)](#72-cicd-pipeline-workflow-github-actions)
+- [8. Project Structure](#8-project-structure)
+- [9. Documentation Index](#9-documentation-index)
+- [10. License](#10-license)
+
+---
+
+
 ## 1. Project Overview
 
 MindGuard is a proactive, digital mental health and psychological support platform designed specifically for academic institutions. Unlike traditional mental health resources that are reactive (responding only after a student reaches crisis), MindGuard establishes a secure, continuous, and intelligent check-in ecosystem.
