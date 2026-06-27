@@ -126,10 +126,10 @@ class MLService:
         mental_wellness_score = base_score - emotional_penalty
         mental_wellness_score = max(0.0, min(100.0, mental_wellness_score))
 
-        # Risk classification mapping
-        if mental_wellness_score < 35.0 or subj_score <= 3:
+        # Risk classification mapping based on wellness score boundaries
+        if mental_wellness_score < 40.0:
             risk_level = "HIGH"
-        elif mental_wellness_score < 65.0 or subj_score <= 6:
+        elif mental_wellness_score < 70.0:
             risk_level = "MEDIUM"
         else:
             risk_level = "LOW"
@@ -189,10 +189,10 @@ class MLService:
             # A higher high_risk_probability reduces the wellness score
             mental_wellness_score = (1.0 - high_risk_probability) * 100.0
 
-            # Determine risk level category
-            if risk_class == 1 or self_score <= 3:
+            # Determine risk level category based on ML model predictions
+            if risk_class == 1:
                 risk_level = "HIGH"
-            elif high_risk_probability > 0.35 or self_score <= 6:
+            elif high_risk_probability > 0.35:
                 risk_level = "MEDIUM"
             else:
                 risk_level = "LOW"

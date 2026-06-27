@@ -31,18 +31,17 @@ async def get_mood_history(
 @journal_router.post(
     "/entries",
     response_model=JournalSubmissionResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Submit journal entry for async emotional evaluation"
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit journal entry for emotional evaluation"
 )
 async def submit_journal_entry(
     payload: JournalSubmissionRequest,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role([UserRole.STUDENT]))
 ):
     """
-    Ingests raw student journal text. Persists details to the database immediately and delegates
-    the NLP sentiment mapping and clinical assessment task to background execution threads.
+    Ingests raw student journal text. Persists details to the database, executes
+    the NLP sentiment mapping and clinical assessment task, and returns evaluation status.
     """
     # 1. Persist raw mood log
     mood_log = await mood_service.create_journal_entry(
@@ -51,10 +50,11 @@ async def submit_journal_entry(
         content=payload.content,
         self_reported_score=payload.self_reported_score
     )
+    # Commit the mood_log row to make it visible to other database session handles
+    await db.commit()
     
-    # 2. Queue background NLP and Risk assessment task
-    background_tasks.add_task(
-        process_journal_entry_background,
+    # 2. Execute NLP and Risk assessment tasks synchronously to avoid front-end query race conditions
+    await process_journal_entry_background(
         mood_log_id=mood_log.id,
         content=payload.content,
         self_reported_score=payload.self_reported_score,
@@ -63,6 +63,6 @@ async def submit_journal_entry(
     
     return JournalSubmissionResponse(
         mood_log_id=mood_log.id,
-        status="processing",
-        message="Journal entry saved. Analysis in progress."
+        status="completed",
+        message="Journal entry saved and analyzed successfully."
     )
